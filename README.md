@@ -1,6 +1,6 @@
-# Basic Redis Leaderboard Demo .NET 5
+# Basic Redis Leaderboard Demo .NET 6
 
-Show how the redis works with .NET 5.
+Show how the redis works with .NET 6.
 
 ![How it works](https://raw.githubusercontent.com/redis-developer/basic-redis-leaderboard-demo-dotnet/master/docs/screenshot001.png)
 
