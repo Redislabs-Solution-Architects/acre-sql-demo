@@ -9,7 +9,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Servi
     {
         Task<List<RankResponseModel>> Range(int start, int ent, bool isDesc);
 
-        Task<(string, string)> GetCompanyBySymbol(string symbol, string preFix);
+        Task<(string, string)> GetCompanyBySymbol(string symbol);
 
         Task<List<RankResponseModel>> GetBySymbols(List<string> symbols);
 
