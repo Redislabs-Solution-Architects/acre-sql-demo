@@ -8,20 +8,23 @@
     }
   },
   "profiles": {
+    "BasicRedisLeaderboardDemoDotNetCore": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:5001;http://localhost:5000",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "REDIS_ENDPOINT_URL": "***REMOVED***:10000",
+        "REDIS_PASSWORD": "***REMOVED***",
+        "IS_AZURE_REDIS": "true"
+      }
+    },
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
-    },
-    "BasicRedisLeaderboardDemoDotNetCore": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:5001;http://localhost:5000"
     }
   }
 }

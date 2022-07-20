@@ -1,6 +1,9 @@
 ﻿using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Models;
 using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Services.Interfaces;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,16 +12,22 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Servi
 {
     public class RankService : IRankService
     {
-        private readonly IDatabase _redisClient;
-        public RankService(IConnectionMultiplexer redis)
+        private readonly IDatabase _db;
+        private readonly WriteBehind _wb;
+        private readonly ILogger<RankService> _logger;
+
+        public RankService(IConnectionMultiplexer redis, ILogger<RankService> logger)
         {
-            _redisClient = redis.GetDatabase();
+            _db = redis.GetDatabase();
+            _wb = new WriteBehind(redis, "company");
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
         }
 
         public async Task<List<RankResponseModel>> Range(int start, int ent, bool isDesc)
         {
             var data = new List<RankResponseModel>();            
-            var results = await _redisClient.SortedSetRangeByRankWithScoresAsync("REDIS_LEADERBOARD",start,ent, isDesc? Order.Descending:Order.Ascending);
+            var results = await _db.SortedSetRangeByRankWithScoresAsync(LeaderboardDemoOptions.RedisKey, start,ent, isDesc? Order.Descending:Order.Ascending);
             var startRank = isDesc ? start + 1 : (results.Count() / 2 - start);
             var increaseFactor = isDesc ? 1 : -1;
             var items = results.ToList();
@@ -40,10 +49,13 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Servi
             return data;
         }
 
-        public async Task<(string, string)> GetCompanyBySymbol(string symbol)
+        public async Task<(string, string)> GetCompanyBySymbol(string symbol, string preFix = "company")
         {
-            var item = await _redisClient.HashGetAllAsync(symbol);
-            return (item[0].ToString(), item[1].ToString());
+            var key = $"{preFix}:{symbol}";
+            HashEntry[] item = await _db.HashGetAllAsync(key);
+            var companyEntry = item.Single(x => x.Name == "company");
+            var countryEntry = item.Single(x => x.Name == "country");
+            return (companyEntry.Value, countryEntry.Value);
         }
 
         public async Task<List<RankResponseModel>> GetBySymbols(List<string> symbols)
@@ -51,7 +63,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Servi
             var results = new List<RankResponseModel>();
             for (var i = 0;i< symbols.Count; i++)
             {
-                var score = await _redisClient.SortedSetScoreAsync("REDIS_LEADERBOARD", symbols[i]);
+                var score = await _db.SortedSetScoreAsync(LeaderboardDemoOptions.RedisKey, symbols[i]);
                 var company = await GetCompanyBySymbol(symbols[i]);
                 results.Add(
                      new RankResponseModel
@@ -69,7 +81,33 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Servi
 
         public async Task<bool> Update(string symbol, double amount)
         {
-            return await _redisClient.SortedSetAddAsync("REDIS_LEADERBOARD", symbol, amount);
+            bool result = false;
+
+            try
+            {
+                
+                await _db.SortedSetAddAsync(LeaderboardDemoOptions.RedisKey, symbol, amount);
+                var company = await GetCompanyBySymbol(symbol);
+                var score = await _db.SortedSetScoreAsync(LeaderboardDemoOptions.RedisKey, symbol);
+                var rank = await _db.SortedSetRankAsync(LeaderboardDemoOptions.RedisKey, symbol);
+
+                HashEntry[] hashEntry = new HashEntry[]
+                {
+                    new HashEntry("marketcap", score),
+                    new HashEntry("rank", rank),
+                    new HashEntry("company", company.Item1),
+                    new HashEntry("country", company.Item2)
+                };
+                _wb.AddToStream(symbol, hashEntry);
+
+                result = true;
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "An error happened during update");
+            }
+
+            return result;
         }
     }
 }

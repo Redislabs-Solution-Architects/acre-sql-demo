@@ -1,21 +1,31 @@
+using BasicRedisLeaderboardDemoDotNetCore.BLL;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Models;
 using BasicRedisLeaderboardDemoDotNetCore.BLL.DbContexts;
 using BasicRedisLeaderboardDemoDotNetCore.Configs;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace BasicRedisLeaderboardDemoDotNetCore
 {
     public class Startup
     {
+        private const string KeySpaceChannel = $"__key*__*";
+        private const string KeyEventChannel = "__keyevent@0__:*";
+        private readonly string[] setCommands = { "hset", "hmset", "hincrbyfloat", "hincrby", "hsetnx", "change" };
+        private readonly string[] delCommands = { "hdel", "del" };
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -24,25 +34,74 @@ namespace BasicRedisLeaderboardDemoDotNetCore
         public IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
-        {
-            var redisEndpointUrl = (Environment.GetEnvironmentVariable("REDIS_ENDPOINT_URL") ?? "127.0.0.1:6379").Split(':');
-            var redisHost = redisEndpointUrl[0];
-            var redisPort = redisEndpointUrl[1];
+        {        
+            services.AddOptions();
+            services.AddOptions<LeaderboardDemoOptions>().Bind(Configuration.GetSection(LeaderboardDemoOptions.Section));
+            var sp = services.BuildServiceProvider();
 
-            string redisConnectionUrl = string.Empty;
-            var redisPassword = Environment.GetEnvironmentVariable("REDIS_PASSWORD");
-            if (redisPassword != null)
-            {
-                redisConnectionUrl = $"{redisPassword}@{redisHost}:{redisPort}";
-            }
-            else
-            {
-                redisConnectionUrl = $"{redisHost}:{redisPort}";
-            }
+            var options = sp.GetService<IOptions<LeaderboardDemoOptions>>();
 
-            var redis = ConnectionMultiplexer.Connect(redisConnectionUrl);
+            var endpoint = options.Value.GetRedisEnpoint();
+            var redisConnection = ConnectionMultiplexer.Connect(endpoint);
+            services.AddSingleton<IConnectionMultiplexer>(redisConnection);
 
-            services.AddSingleton<IConnectionMultiplexer>(redis);
+            redisConnection.GetServer(redisConnection.GetEndPoints().Single())
+             .ConfigSet("notify-keyspace-events", "KEA"); // KEA=everything
+              
+            //subscribe to the event
+            redisConnection.GetSubscriber().Subscribe(KeySpaceChannel,
+                async (channel, message) => {
+                    if (setCommands.Any(x => x.Contains(message)))
+                    {
+                        // There was a set so we need to send it to process it async
+                        Console.WriteLine($"received {message} on {channel}");
+                        var db = redisConnection.GetDatabase();
+                        var keyArr = channel.ToString().Split(":");
+                        var fullKey = "";
+                        var key = "";
+
+                        if(keyArr.Length == 3 )
+                        {
+                            fullKey = $"{keyArr[1]}:{keyArr[2]}";
+                            key = keyArr[2];
+                        }
+                        else
+                        {
+                            fullKey = keyArr[1];
+                            key = keyArr[1];
+                        }
+                     
+
+                        try
+                        {
+                            switch (message)
+                            {
+                                case "hset":
+                                    HashEntry[] hashEntry = await db.HashGetAllAsync(fullKey);
+                                    var score = await db.SortedSetScoreAsync(LeaderboardDemoOptions.RedisKey, key);
+                                    var rank = await db.SortedSetRankAsync(LeaderboardDemoOptions.RedisKey, key);
+                                    hashEntry = hashEntry.Append(new HashEntry("marketcap", score)).ToArray();
+                                    hashEntry = hashEntry.Append(new HashEntry("rank", rank)).ToArray();
+                                    var wb = new WriteBehind(redisConnection, "company");
+                                    wb.AddToStream(key, hashEntry);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+                    }
+
+                    if (delCommands.Any(x => x.Contains(message)))
+                    {
+                        Console.WriteLine($"received {message} on {channel}");
+
+
+                    }
+                });
 
             Assembly.Load("BasicRedisLeaderboardDemoDotNetCore.BLL");
             ServiceAutoConfig.Configure(services);
@@ -53,9 +112,22 @@ namespace BasicRedisLeaderboardDemoDotNetCore
             {
                 configuration.RootPath = "ClientApp/dist";
             });
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("VueCorsPolicy", builder =>
+                {
+                    builder
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowAnyOrigin();
+                });
+            });
+
+            services.AddMvc(option => option.EnableEndpointRouting = false);
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICorsService corsService, ICorsPolicyProvider corsPolicyProvider)
         {
             if (env.IsDevelopment())
             {
@@ -67,6 +139,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore
                 app.UseHsts();
             }
 
+            app.UseCors("VueCorsPolicy");
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
@@ -81,7 +154,10 @@ namespace BasicRedisLeaderboardDemoDotNetCore
                     FileProvider = new PhysicalFileProvider(clientPath)
                 };
                 client.UseSpaStaticFiles(clientAppDist);
-                client.UseSpa(spa => { spa.Options.DefaultPageStaticFileOptions = clientAppDist; });
+                client.UseSpa(spa =>
+                {
+                    spa.Options.DefaultPageStaticFileOptions = clientAppDist;
+                });
 
                 app.UseEndpoints(endpoints =>
                 {

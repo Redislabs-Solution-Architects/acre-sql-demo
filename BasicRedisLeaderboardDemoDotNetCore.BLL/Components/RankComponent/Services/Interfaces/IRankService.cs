@@ -8,7 +8,9 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Servi
     public interface IRankService : IService
     {
         Task<List<RankResponseModel>> Range(int start, int ent, bool isDesc);
-        Task<(string, string)> GetCompanyBySymbol(string symbol);
+
+        Task<(string, string)> GetCompanyBySymbol(string symbol, string preFix);
+
         Task<List<RankResponseModel>> GetBySymbols(List<string> symbols);
 
         Task<bool> Update(string symbol, double amount);
