@@ -1,7 +1,14 @@
-﻿using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Models;
+﻿using BasicRedisLeaderboardDemoDotNetCore.BLL.Components;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Models;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace BasicRedisLeaderboardDemoDotNetCore.BLL.DbContexts
@@ -614,21 +621,72 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.DbContexts
                     Country= "Japan",
                   }
             };
-            var redisClient = serviceScope.ServiceProvider.GetService<IConnectionMultiplexer>().GetDatabase();
 
-            await redisClient.KeyDeleteAsync("*");
+            var redisConnection = serviceScope.ServiceProvider.GetService<IConnectionMultiplexer>();
+            var redisDatabase = redisConnection.GetDatabase();
+            IOptions<LeaderboardDemoOptions> options = serviceScope.ServiceProvider.GetService<IOptions<LeaderboardDemoOptions>>();
+
+
+            if(options.Value.DeleteAllKeysOnLoad)
+            await DeleteAllKeys(redisConnection, redisDatabase);
 
             for (var i = 0;i< ranks.Count; i++)
             {
                 var rank = ranks[i];
-                await redisClient.SortedSetAddAsync("REDIS_LEADERBOARD", rank.Symbol.ToLower(), rank.MarketCap);
-                await redisClient.HashSetAsync(rank.Symbol.ToLower(), new HashEntry[]
+
+                try
                 {
-                  new HashEntry("company", rank.Company),
-                  new HashEntry("country",rank.Country)
-                });
+                    // TODO: Optional use search to index and get sorted results
+                    var key = $"company:{rank.Symbol.ToLower()}";
+
+                    await redisDatabase.SortedSetAddAsync(LeaderboardDemoOptions.RedisKey, rank.Symbol.ToLower(), rank.MarketCap);
+
+                    await redisDatabase.HashSetAsync(key, new HashEntry[]
+                    {
+                      new HashEntry(nameof(rank.Company).ToLower(), rank.Company),
+                      new HashEntry(nameof(rank.Country).ToLower(), rank.Country)
+                    });                            
+                }
+                catch(Exception ex)
+                {
+
+                }
             }
-            
+        }
+
+        private static async Task DeleteAllKeys(IConnectionMultiplexer redisConnection, IDatabase redisDatabase)
+        {
+            //StackEchange.Redis uses non bloking UNLINK if the feature is available
+            // https://github.com/StackExchange/StackExchange.Redis/blob/main/src/StackExchange.Redis/RedisDatabase.cs
+
+            foreach (var endPoint in redisConnection.GetEndPoints())
+            {
+                var server = redisConnection.GetServer(endPoint);              
+                var keys = server.Keys();
+
+                if (keys.Count() != 0)
+                {
+                    var keyArr = keys.ToArray();
+
+                    try
+                    {
+                        var query = keyArr.GroupBy(x => x.GetHashCode());
+
+                        foreach(IGrouping<int, RedisKey> keyGroup in query)
+                        {
+                            foreach (var key in keyGroup)
+                            {
+                                await redisDatabase.KeyDeleteAsync(key);
+                            }
+                        }
+
+                    }
+                    catch(Exception ex)
+                    {
+                        
+                    }
+                }
+            }
         }
     }
 }
