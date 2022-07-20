@@ -57,17 +57,14 @@ namespace BasicRedisLeaderboardDemoDotNetCore
                         Console.WriteLine($"received {message} on {channel}");
                         var db = redisConnection.GetDatabase();
                         var keyArr = channel.ToString().Split(":");
-                        var fullKey = "";
                         var key = "";
 
                         if(keyArr.Length == 3 )
                         {
-                            fullKey = $"{keyArr[1]}:{keyArr[2]}";
-                            key = keyArr[2];
+                            key = $"{keyArr[1]}:{keyArr[2]}";
                         }
                         else
-                        {
-                            fullKey = keyArr[1];
+                        {                           
                             key = keyArr[1];
                         }
                      
@@ -77,7 +74,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore
                             switch (message)
                             {
                                 case "hset":
-                                    HashEntry[] hashEntry = await db.HashGetAllAsync(fullKey);
+                                    HashEntry[] hashEntry = await db.HashGetAllAsync(key);
                                     var score = await db.SortedSetScoreAsync(LeaderboardDemoOptions.RedisKey, key);
                                     var rank = await db.SortedSetRankAsync(LeaderboardDemoOptions.RedisKey, key);
                                     hashEntry = hashEntry.Append(new HashEntry("marketcap", score)).ToArray();
@@ -91,14 +88,14 @@ namespace BasicRedisLeaderboardDemoDotNetCore
                         }
                         catch (Exception ex)
                         {
-
+                           
                         }
                     }
 
                     if (delCommands.Any(x => x.Contains(message)))
                     {
                         Console.WriteLine($"received {message} on {channel}");
-
+                        // We want to keep the records in the SQL database, for this reason we don't sync deletes.
 
                     }
                 });

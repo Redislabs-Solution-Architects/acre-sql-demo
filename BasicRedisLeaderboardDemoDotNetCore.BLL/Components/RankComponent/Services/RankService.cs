@@ -15,11 +15,12 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Servi
         private readonly IDatabase _db;
         private readonly WriteBehind _wb;
         private readonly ILogger<RankService> _logger;
+        private const string keyPrefix = "company";
 
         public RankService(IConnectionMultiplexer redis, ILogger<RankService> logger)
         {
             _db = redis.GetDatabase();
-            _wb = new WriteBehind(redis, "company");
+            _wb = new WriteBehind(redis, keyPrefix);
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         }
@@ -31,16 +32,19 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Servi
             var startRank = isDesc ? start + 1 : (results.Count() / 2 - start);
             var increaseFactor = isDesc ? 1 : -1;
             var items = results.ToList();
+
             for (var i = 0; i < items.Count; i++)
             {
+                var symbol = items[i].Element.ToString().Split(":")[1];
                 var company = await GetCompanyBySymbol(items[i].Element);
+
                 data.Add(
                     new RankResponseModel
                     {
                         Company = company.Item1,
                         Country = company.Item2,
                         Rank = startRank,
-                        Symbol = items[i].Element,
+                        Symbol = symbol,
                         MarketCap = items[i].Score,
                     });
                 startRank += increaseFactor;
@@ -49,10 +53,9 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Servi
             return data;
         }
 
-        public async Task<(string, string)> GetCompanyBySymbol(string symbol, string preFix = "company")
-        {
-            var key = $"{preFix}:{symbol}";
-            HashEntry[] item = await _db.HashGetAllAsync(key);
+        public async Task<(string, string)> GetCompanyBySymbol(string symbol)
+        {           
+            HashEntry[] item = await _db.HashGetAllAsync(symbol);
             var companyEntry = item.Single(x => x.Name == "company");
             var countryEntry = item.Single(x => x.Name == "country");
             return (companyEntry.Value, countryEntry.Value);
@@ -82,14 +85,13 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Servi
         public async Task<bool> Update(string symbol, double amount)
         {
             bool result = false;
-
+            string key = $"{keyPrefix}:{symbol}";
             try
             {
-                
-                await _db.SortedSetAddAsync(LeaderboardDemoOptions.RedisKey, symbol, amount);
-                var company = await GetCompanyBySymbol(symbol);
-                var score = await _db.SortedSetScoreAsync(LeaderboardDemoOptions.RedisKey, symbol);
-                var rank = await _db.SortedSetRankAsync(LeaderboardDemoOptions.RedisKey, symbol);
+                await _db.SortedSetAddAsync(LeaderboardDemoOptions.RedisKey, key, amount);
+                var company = await GetCompanyBySymbol(key);
+                var score = await _db.SortedSetScoreAsync(LeaderboardDemoOptions.RedisKey, key);
+                var rank = await _db.SortedSetRankAsync(LeaderboardDemoOptions.RedisKey, key);
 
                 HashEntry[] hashEntry = new HashEntry[]
                 {

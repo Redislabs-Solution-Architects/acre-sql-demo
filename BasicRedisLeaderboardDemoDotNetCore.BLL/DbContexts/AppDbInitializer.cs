@@ -639,7 +639,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.DbContexts
                     // TODO: Optional use search to index and get sorted results
                     var key = $"company:{rank.Symbol.ToLower()}";
 
-                    await redisDatabase.SortedSetAddAsync(LeaderboardDemoOptions.RedisKey, rank.Symbol.ToLower(), rank.MarketCap);
+                    await redisDatabase.SortedSetAddAsync(LeaderboardDemoOptions.RedisKey, key, rank.MarketCap);
 
                     await redisDatabase.HashSetAsync(key, new HashEntry[]
                     {
