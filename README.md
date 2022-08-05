@@ -1,98 +1,60 @@
-# Basic Redis Leaderboard Demo .NET 6
+# Basic Redis Leaderboard Demo .Net 6 with Write-Behind
+
 ## Summary
-We based this project from our [Basic Leaderboard](https://github.com/redis-developer/basic-redis-leaderboard-demo-dotnet) project to show how you can acess ACRE using .NET 6 and added a Write-Behind pattern to Azure SQL. At the moment, our preferred way to implement this pattern is to use RedisGears, but is not availble in ACRE at this time.
+
+We based this project from our [Basic Leaderboard](https://github.com/redis-developer/basic-redis-leaderboard-demo-dotnet) project to show how you can acess Azure Cache for Redis using .NET 6 and added a Write-Behind pattern to Azure SQL. At the moment, our preferred way to implement this pattern is to use RedisGears, but is not availble in ACRE at this time.
 
 We decided to implement the Write-Behind pattern using an Azure Function that reads the key change sent through a Redis Stream. It is using a pulling mechanism but we are looking forward to implement it using an event-driven approach.
 
 ![How it works](./Solution%20Items/Images/screenshot001.png)
 
-# Overview video
+## Features
 
-Here's a short video that explains the project and how it uses Redis:
+- Listens to Key Space Notifications to add changes to the stream
+- Use StackExchange.Redis to access ACRE
+- Use Azure Function to sync the updates to Azure SQL db using a Write-Behind pattern
 
-[![Watch the video on YouTube](./Solution%20Items/Images/YTThumbnail.png)](https://www.youtube.com/watch?v=zzinHxdZ34I)
+### Prerequisites
 
-# How it works?
+- VS Code or Visual Studio
+- .Net 6
+- OSX or Windows
 
-## How the data is stored:
+### Installation
 
-- The AAPL's details - market cap of 2,6 trillions and USA origin - are stored in a hash like below:
-  - E.g `HSET "company:AAPL" symbol "AAPL" market_cap "2600000000000" country USA`
-- The Ranks of AAPL of 2,6 trillions are stored in a <a href="https://redislabs.com/ebook/part-1-getting-started/chapter-1-getting-to-know-redis/1-2-what-redis-data-structures-look-like/1-2-5-sorted-sets-in-redis/">ZSET</a>.
-  - E.g `ZADD companyLeaderboard 2600000000000 company:AAPL`
+If you need to run the front end by itself:
 
-## How the data is accessed:
+1. Go to the ClientApp folder
 
-- Top 10 companies:
-  - E.g `ZREVRANGE companyLeaderboard 0 9 WITHSCORES`
-- All companies:
-  - E.g `ZREVRANGE companyLeaderboard 0 -1 WITHSCORES`
-- Bottom 10 companies:
-  - E.g `ZRANGE companyLeaderboard 0 9 WITHSCORES`
-- Between rank 10 and 15:
-  - E.g `ZREVRANGE companyLeaderboard 9 14 WITHSCORES`
-- Show ranks of AAPL, FB and TSLA:
-  - E.g `ZSCORE companyLeaderBoard company:AAPL company:FB company:TSLA`
-- Adding market cap to companies:
-  - E.g `ZINCRBY companyLeaderBoard 1000000000 "company:FB"`
-- Reducing market cap to companies:
-  - E.g `ZINCRBY companyLeaderBoard -1000000000 "company:FB"`
-- Companies over a Trillion:
-  - E.g `ZCOUNT companyLeaderBoard 1000000000000 +inf`
-- Companies between 500 billion and 1 trillion:
-  - E.g `ZCOUNT companyLeaderBoard 500000000000 1000000000000`
-
-### Code Example: Get top 10 companies
-
-```C#
-[HttpGet("top10")]
-public async Task<IActionResult> GetTop10()
-{
-    return Ok(await _rankService.Range(0, 9, true));
-}
+```sh
+cd BasicRedisLeaderboardDemoDotNetCore
+cd ClientApp
+code .
 ```
 
-```csharp
- public async Task<List<RankResponseModel>> Range(int start, int ent, bool isDesc)
-  {
-      var data = new List<RankResponseModel>();            
-      var results = await _db.SortedSetRangeByRankWithScoresAsync(LeaderboardDemoOptions.RedisKey, start,ent, isDesc? Order.Descending:Order.Ascending);
-      var startRank = isDesc ? start + 1 : (results.Count() / 2 - start);
-      var increaseFactor = isDesc ? 1 : -1;
-      var items = results.ToList();
+2. Install node modules
 
-      for (var i = 0; i < items.Count; i++)
-      {
-          var symbol = items[i].Element.ToString().Split(":")[1];
-          var company = await GetCompanyBySymbol(items[i].Element);
+```sh
+npm install
+```
+3. Run front end
 
-          data.Add(
-              new RankResponseModel
-              {
-                  Company = company.Item1,
-                  Country = company.Item2,
-                  Rank = startRank,
-                  Symbol = symbol,
-                  MarketCap = items[i].Score,
-              });
-          startRank += increaseFactor;
-      }
-
-      return data;
-  }
+```sh
+npm run serve
 ```
 
-## How to run it locally?
+### Quickstart
 
-### Development
+1. Clone the git repository
 
-```
+```sh
 git clone https://github.com/Redislabs-Solution-Architects/acre-sql-demo
 ```
 
-#### Write in App Settings actual connection to Redis:
+2. Open it with your Visual Studio Code or Visual Studio
+3. Update App Settings to include actual connection to Redis:
 
-```
+```text
 RedisHost = "Redis server URI"
 RedisPort = "Redis port"
 RedisPassword = "Password to the server"
@@ -101,21 +63,23 @@ AllowAdmin = "True if need to run certain commands"
 DeleteAllKeysOnLoad = "True if need to delete all keys during load"
 ```
 
-#### Run backend
+4. Run backend
 
 ```sh
 dotnet run
 ```
 
-#### Run Azure Function
-```
+5. Run Azure Function
+
+```sh
 cd SQLSweeperFunction
 func start
 ```
 
+Note:
 Static content runs automatically with the backend part. In case you need to run it separately, please see README in the [client](./BasicRedisLeaderboardDemoDotNetCore/ClientApp/README.md) folder.
 
-## Try it out
+## Demo
 
 #### Deploy to Heroku
 
@@ -135,4 +99,7 @@ Static content runs automatically with the backend part. In case you need to run
 
 #### Deploy to Azure
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https:%3A%2F%2raw.githubusercontent.com%2FRedislabs-Solution-Architects%2Facre-sql-demo%2Fmain%2FSolution%20Items%2FAzure%2Fazuredeploy.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FRedislabs-Solution-Architects%2Facre-sql-demo%2Fmain%2FSolution%20Items%2FAzure%2Fazuredeploy.json)
+
+## Resources
+- [Basic Readis Leaderboard Demo](https://github.com/redis-developer/basic-redis-leaderboard-demo-dotnet)
