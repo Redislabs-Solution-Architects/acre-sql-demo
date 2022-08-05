@@ -1,8 +1,8 @@
 # Basic Redis Leaderboard Demo .NET 6
 ## Summary
-We based this project Show how the redis works with .NET 6 and added a Write-Behind Cache pattern to Azure SQL. Our preffered way to implement it to use RedisGears but is not availble at the moment in ACRE.
+We based this project from our [Basic Leaderboard](https://github.com/redis-developer/basic-redis-leaderboard-demo-dotnet) project to show how you can acess ACRE using .NET 6 and added a Write-Behind pattern to Azure SQL. At the moment, our preferred way to implement this pattern is to use RedisGears, but is not availble in ACRE at this time.
 
-We decided to implemnt the Write-Behind pattern using an Azure Function that reads the change sent through a Redis Stream. At the moment, is using a pulling mechanism but we are looking forward in the future to emplement it using an event-driven approach.
+We decided to implement the Write-Behind pattern using an Azure Function that reads the key change sent through a Redis Stream. It is using a pulling mechanism but we are looking forward to implement it using an event-driven approach.
 
 ![How it works](./Solution%20Items/Images/screenshot001.png)
 
