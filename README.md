@@ -1,14 +1,16 @@
 # Basic Redis Leaderboard Demo .NET 6
+## Summary
+We based this project Show how the redis works with .NET 6 and added a Write-Behind Cache pattern to Azure SQL. Our preffered way to implement it to use RedisGears but is not availble at the moment in ACRE.
 
-Show how the redis works with .NET 6.
+We decided to implemnt the Write-Behind pattern using an Azure Function that reads the change sent through a Redis Stream. At the moment, is using a pulling mechanism but we are looking forward in the future to emplement it using an event-driven approach.
 
-![How it works](https://raw.githubusercontent.com/redis-developer/basic-redis-leaderboard-demo-dotnet/master/docs/screenshot001.png)
+![How it works](./Solution%20Items/Images/screenshot001.png)
 
 # Overview video
 
 Here's a short video that explains the project and how it uses Redis:
 
-[![Watch the video on YouTube](https://github.com/redis-developer/basic-redis-leaderboard-demo-dotnet/raw/master/docs/YTThumbnail.png)](https://www.youtube.com/watch?v=zzinHxdZ34I)
+[![Watch the video on YouTube](./Solution%20Items/Images/YTThumbnail.png)](https://www.youtube.com/watch?v=zzinHxdZ34I)
 
 # How it works?
 
@@ -51,30 +53,33 @@ public async Task<IActionResult> GetTop10()
 ```
 
 ```csharp
-public async Task<List<RankResponseModel>> Range(int start, int ent, bool isDesc)
-{
-    var data = new List<RankResponseModel>();            
-    var results = await _redisClient.SortedSetRangeByRankWithScoresAsync("REDIS_LEADERBOARD",start,ent, isDesc? Order.Descending:Order.Ascending);
-    var startRank = isDesc ? start + 1 : (results.Count() / 2 - start);
-    var increaseFactor = isDesc ? 1 : -1;
-    var items = results.ToList();
-    for (var i = 0; i < items.Count; i++)
-    {
-        var company = await GetCompanyBySymbol(items[i].Element);
-        data.Add(
-            new RankResponseModel
-            {
-                Company = company.Item1,
-                Country = company.Item2,
-                Rank = startRank,
-                Symbol = items[i].Element,
-                MarketCap = items[i].Score,
-            });
-        startRank += increaseFactor;
-    }
+ public async Task<List<RankResponseModel>> Range(int start, int ent, bool isDesc)
+  {
+      var data = new List<RankResponseModel>();            
+      var results = await _db.SortedSetRangeByRankWithScoresAsync(LeaderboardDemoOptions.RedisKey, start,ent, isDesc? Order.Descending:Order.Ascending);
+      var startRank = isDesc ? start + 1 : (results.Count() / 2 - start);
+      var increaseFactor = isDesc ? 1 : -1;
+      var items = results.ToList();
 
-    return data;
-}
+      for (var i = 0; i < items.Count; i++)
+      {
+          var symbol = items[i].Element.ToString().Split(":")[1];
+          var company = await GetCompanyBySymbol(items[i].Element);
+
+          data.Add(
+              new RankResponseModel
+              {
+                  Company = company.Item1,
+                  Country = company.Item2,
+                  Rank = startRank,
+                  Symbol = symbol,
+                  MarketCap = items[i].Score,
+              });
+          startRank += increaseFactor;
+      }
+
+      return data;
+  }
 ```
 
 ## How to run it locally?
@@ -82,14 +87,18 @@ public async Task<List<RankResponseModel>> Range(int start, int ent, bool isDesc
 ### Development
 
 ```
-git clone https://github.com/redis-developer/basic-redis-leaderboard-demo-dotnet.git
+git clone https://github.com/Redislabs-Solution-Architects/acre-sql-demo
 ```
 
-#### Write in environment variable or Dockerfile actual connection to Redis:
+#### Write in App Settings actual connection to Redis:
 
 ```
-REDIS_ENDPOINT_URL = "Redis server URI:PORT_NUMBER"
-REDIS_PASSWORD = "Password to the server"
+RedisHost = "Redis server URI"
+RedisPort = "Redis port"
+RedisPassword = "Password to the server"
+IsACRE = "True if using Azure Cache for Redis Enterprise"
+AllowAdmin = "True if need to run certain commands"
+DeleteAllKeysOnLoad = "True if need to delete all keys during load"
 ```
 
 #### Run backend
@@ -98,7 +107,13 @@ REDIS_PASSWORD = "Password to the server"
 dotnet run
 ```
 
-Static content runs automatically with the backend part. In case you need to run it separately, please see README in the [client](client) folder.
+#### Run Azure Function
+```
+cd SQLSweeperFunction
+func start
+```
+
+Static content runs automatically with the backend part. In case you need to run it separately, please see README in the [client](./BasicRedisLeaderboardDemoDotNetCore/ClientApp/README.md) folder.
 
 ## Try it out
 
@@ -117,3 +132,7 @@ Static content runs automatically with the backend part. In case you need to run
         <img src="https://deploy.cloud.run/button.svg" alt="Run on Google Cloud" width="150px"/>
     </a>
 </p>
+
+#### Deploy to Azure
+
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https:%3A%2F%2raw.githubusercontent.com%2FRedislabs-Solution-Architects%2Facre-sql-demo%2Fmain%2FSolution%20Items%2FAzure%2Fazuredeploy.json)

@@ -143,9 +143,9 @@ const BILLION = 1000 * 1000 * 1000;
 const MILLION = 1000 * 1000;
 
 const API_BASE = location.hostname === 'localhost'
-  ? 'http://localhost:5000/api'
+  ? 'https://localhost:5001/api'
   : location.origin + '/api'
-
+axios.defaults.headers.common['Access-Control-Allow-Origin'] = '*'
 import RankSelectionModal from './RankSelectionModal'
 export default {
   name: 'Example',
