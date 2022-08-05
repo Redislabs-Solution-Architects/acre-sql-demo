@@ -25,6 +25,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore
         private const string KeyEventChannel = "__keyevent@0__:*";
         private readonly string[] setCommands = { "hset", "hmset", "hincrbyfloat", "hincrby", "hsetnx", "change" };
         private readonly string[] delCommands = { "hdel", "del" };
+        private readonly string _policyName = "CorsPolicy";
 
         public Startup(IConfiguration configuration)
         {
@@ -110,14 +111,13 @@ namespace BasicRedisLeaderboardDemoDotNetCore
                 configuration.RootPath = "ClientApp/dist";
             });
 
-            services.AddCors(options =>
+            services.AddCors(opt =>
             {
-                options.AddPolicy("VueCorsPolicy", builder =>
+                opt.AddPolicy(name: _policyName, builder =>
                 {
-                    builder
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowAnyOrigin();
+                    builder.AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
                 });
             });
 
@@ -136,12 +136,14 @@ namespace BasicRedisLeaderboardDemoDotNetCore
                 app.UseHsts();
             }
 
-            app.UseCors("VueCorsPolicy");
+           
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
 
             app.UseRouting();
+            app.UseCors(_policyName);
+            app.UseAuthorization();
 
             app.Map(new PathString(""), client =>
             {
