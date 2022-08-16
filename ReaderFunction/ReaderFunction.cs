@@ -7,16 +7,19 @@ using StackExchange.Redis;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http;
+using Microsoft.Extensions.Logging;
 
 namespace ReaderFunction
 {
     public class ReaderFunction
     {
         private readonly IReadThrough _readThrough;
+        private readonly ILogger<ReaderFunction> _logger;
 
-        public ReaderFunction(IReadThrough readThrough)
+        public ReaderFunction(IReadThrough readThrough, ILogger<ReaderFunction> logger)
         {
             _readThrough = readThrough ?? throw new ArgumentNullException(nameof(readThrough));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         [Function("GetBySymbol")]
@@ -37,7 +40,7 @@ namespace ReaderFunction
             }
             catch(Exception ex)
             {
-
+                _logger.LogError(ex, "There was an error during GetByKey method.");
             }
                       
             response = req.CreateResponse(System.Net.HttpStatusCode.NoContent);
@@ -63,7 +66,7 @@ namespace ReaderFunction
             }
             catch(Exception ex)
             {
-
+                _logger.LogError(ex, "There was an error during GetByRange method.");
 
             }
 

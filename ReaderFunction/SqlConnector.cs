@@ -35,7 +35,7 @@ namespace ReaderFunction
             }
             catch(Exception ex)
             {
-                _logger.LogError($"Got exception, error={ex.Message}");
+                _logger.LogError(ex, "Exception during GetDataBySymbol");
             }
 
             return data;
@@ -56,7 +56,7 @@ namespace ReaderFunction
             }
             catch(Exception ex)
             {
-
+                _logger.LogError(ex, "Exception during GetDataByRange");
             }
 
             return data;
