@@ -14,6 +14,8 @@ We decided to implement the Write-Behind pattern using an Azure Function that re
 - Use StackExchange.Redis to access ACRE
 - Use Azure Function to sync the updates to Azure SQL db using a Write-Behind pattern
 
+### Architecture
+![Architecture](/Solution%20Items/Images/architecture.png)
 ### Prerequisites
 
 - VS Code or Visual Studio
