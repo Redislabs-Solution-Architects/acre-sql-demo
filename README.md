@@ -21,9 +21,23 @@ We decided to implement the Write-Behind pattern using an Azure Function that re
 - VS Code or Visual Studio
 - .Net 6
 - OSX or Windows
+- Azure SQL
+  - Configuration steps [here](https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-quickstart?view=azuresql&tabs=azure-portal)
+- Azure Cache for Redis Enterprise
+  - Configuration steps [here](https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/quickstart-create-redis-enterprise)
 
-### Installation
+## Installation
 
+### Azure SQL
+Run SQL Script to create table:
+
+1. Copy the contents of the script named "CreateCompanyTable.sql". The file is located inside the SQL folder located in the Solution Items folder.
+
+2. Open the query editor of your preferred database tool (Azure Data Studio or SQL Server Management Studio) and paste the SQL script copied during Step 1.
+
+3. Run the script to create the table.
+
+### Front End
 If you need to run the front end by itself:
 
 1. Go to the ClientApp folder
@@ -45,7 +59,7 @@ npm install
 npm run serve
 ```
 
-### Quickstart
+## Quickstart
 
 1. Clone the git repository
 
@@ -54,7 +68,8 @@ git clone https://github.com/Redislabs-Solution-Architects/acre-sql-demo
 ```
 
 2. Open it with your Visual Studio Code or Visual Studio
-3. Update App Settings to include actual connection to Redis:
+
+3. Update App Settings to: include actual connection to Redis, Azure SQL and configure the application:
 
 ```text
 RedisHost = "Redis server URI"
@@ -63,20 +78,54 @@ RedisPassword = "Password to the server"
 IsACRE = "True if using Azure Cache for Redis Enterprise"
 AllowAdmin = "True if need to run certain commands"
 DeleteAllKeysOnLoad = "True if need to delete all keys during load"
+LoadInitialData = "True if running the application for the first time and want to load test data"
+UseReadThrough = "True to use the Read Through pattern"
+UseWriteBehind = "True to use the Write Behind pattern"
+ReadThroughFunctionBaseUrl = "Url of the Read Through Function"
 ```
 
-4. Run backend
+4. Update local.settings.json for the SQLSweeperFunction
+    - Replace "--SECRET--" with the real connection strings for Azure SQL and Redis
+
+    ```text
+    "ConnectionStrings": {
+      "SQLConnectionString": "--SECRET--",
+      "RedisConnectionString": "--SECRET--"
+    }
+    ```
+
+5. Update local.settings.json for the ReaderFunction
+    - Replace "--SECRET--" with the real values
+
+    ```text
+    "ReaderFunctionSettings:RedisHost": "--SECRET--",
+    "ReaderFunctionSettings:RedisPort": "10000",
+    "ReaderFunctionSettings:RedisPassword": "--SECRET--",
+    "ReaderFunctionSettings:IsACRE": "true",
+    "ReaderFunctionSettings:SQLConnectionString": "--SECRET--"
+    ```
+
+6. Run backend
 
 ```sh
 dotnet run
 ```
 
-5. Run Azure Function
+7. Run Azure Function (Write Behind)
+    - You can try the Write BEhind pattern by setting "true" to the "UseWriteBehind" configuration variable inside the appsettings.json. If so, you need to run the Write Behind Function by:
 
-```sh
-cd SQLSweeperFunction
-func start
-```
+    ```sh
+    cd SQLSweeperFunction
+    func start
+    ```
+
+8. Run Azure Function (Read Through)
+   - You can try the Read Through pattern by setting "true" to the "UseReadThrough" configuration variable inside the appsettings.json. If so, you need to run the Read Through function by:
+
+   ```sh
+   cd ReaderFunction
+   func start
+   ```
 
 Note:
 Static content runs automatically with the backend part. In case you need to run it separately, please see README in the [client](./BasicRedisLeaderboardDemoDotNetCore/ClientApp/README.md) folder.
