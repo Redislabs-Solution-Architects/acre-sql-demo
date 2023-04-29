@@ -1,4 +1,4 @@
-﻿namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Models
+﻿namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Models
 {
     public class RankResponseModel
     {

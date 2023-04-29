@@ -1,11 +1,10 @@
-﻿using BasicRedisLeaderboardDemoDotNetCore.Base.Interfaces;
-using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Models;
+﻿using BasicRedisLeaderboardDemoDotNetCore.BLL.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Services.Interfaces
+namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services.Interfaces
 {
-    public interface IRankService : IService
+    public interface IRankService
     {
         Task<List<RankResponseModel>> Range(int start, int ent, bool isDesc);
 

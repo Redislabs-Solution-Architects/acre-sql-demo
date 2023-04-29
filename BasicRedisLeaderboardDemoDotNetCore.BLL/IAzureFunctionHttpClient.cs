@@ -1,5 +1,5 @@
 ﻿using System;
-using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Models;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

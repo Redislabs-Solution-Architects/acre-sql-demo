@@ -1,6 +1,6 @@
-﻿using BasicRedisLeaderboardDemoDotNetCore.BLL.Components;
-using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Models;
-using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Services.Interfaces;
+﻿using BasicRedisLeaderboardDemoDotNetCore.BLL;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Models;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;

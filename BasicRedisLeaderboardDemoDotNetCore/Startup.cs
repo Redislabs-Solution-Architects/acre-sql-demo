@@ -1,9 +1,8 @@
 using BasicRedisLeaderboardDemoDotNetCore.BLL;
-using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Models;
-using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Services;
-using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Services.Interfaces;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Models;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Services;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Services.Interfaces;
 using BasicRedisLeaderboardDemoDotNetCore.BLL.DbContexts;
-using BasicRedisLeaderboardDemoDotNetCore.Configs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
@@ -18,6 +17,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace BasicRedisLeaderboardDemoDotNetCore
 {
@@ -53,13 +54,20 @@ namespace BasicRedisLeaderboardDemoDotNetCore
 
             services.AddSingleton<IConnectionMultiplexer>(redisConnection);
            
-            if(options.UseReadThrough)
+            if(options.UseReadThrough && !options.UseCacheAside)
             {
                 services.AddHttpClient<IAzureFunctionHttpClient, AzureFunctionHttpClient>(httpClient =>
                 {
                     httpClient.BaseAddress = new Uri(options.ReadThroughFunctionBaseUrl);
                 });
                 services.AddTransient<IRankService, RankServiceReadThrough>();
+            }
+            else if(options.UseCacheAside)
+            {
+                services.AddTransient<IRankService, RankServiceCacheAside>();
+                services.AddDbContext<AppDbContext>(options =>
+                    options.UseSqlServer(Configuration.GetConnectionString("ConnectionString"))
+                );
             }
             else
             {
