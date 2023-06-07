@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Models;
-using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Services.Interfaces;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Models;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
-namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Services
+namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
 {
     public abstract class RankServiceAbstract 
     {
@@ -31,7 +31,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Servi
 
         public abstract Task<List<RankResponseModel>> Range(int start, int ent, bool isDesc);
 
-        public async Task<bool> Update(string symbol, double amount)
+        public virtual async Task<bool> Update(string symbol, double amount)
         {
             bool result = false;
             string key = $"{keyPrefix}:{symbol}";

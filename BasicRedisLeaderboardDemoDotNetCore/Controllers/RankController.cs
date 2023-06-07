@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Services.Interfaces;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BasicRedisLeaderboardDemoDotNetCore.Controllers

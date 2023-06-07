@@ -1,4 +1,4 @@
-﻿using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Services.Interfaces;
+﻿using BasicRedisLeaderboardDemoDotNetCore.BLL.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;

@@ -402,3 +402,6 @@ FodyWeavers.xsd
 .DS_Store
 __*
 azurite.exe
+SQLSweeperFunction/local.settings.json
+ReaderFunction/local.settings.json
+BasicRedisLeaderboardDemoDotNetCore/appsettings.Development.json

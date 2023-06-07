@@ -1,5 +1,5 @@
-﻿using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Models;
-using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Services.Interfaces;
+﻿using BasicRedisLeaderboardDemoDotNetCore.BLL.Models;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Services
+namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
 {
     public class RankService : RankServiceAbstract, IRankService
     {

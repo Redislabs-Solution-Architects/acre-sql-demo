@@ -13,9 +13,14 @@ We decided to implement the Write-Behind pattern using an Azure Function that re
 - Listens to Key Space Notifications to add changes to the stream
 - Use StackExchange.Redis to access ACRE
 - Use Azure Function to sync the updates to Azure SQL db using a Write-Behind pattern
+- Use Azure Function to use Read-Through pattern
+- Ability to configure Cache-Aside pattern
+- Ability to configure Pre-Fetch pattern with RDI
 
 ### Architecture
+
 ![Architecture](/Solution%20Items/Images/architecture.png)
+
 ### Prerequisites
 
 - VS Code or Visual Studio
@@ -29,60 +34,64 @@ We decided to implement the Write-Behind pattern using an Azure Function that re
 ## Installation
 
 ### Azure SQL
-Run SQL Script to create table:
 
-1. Copy the contents of the script named "CreateCompanyTable.sql". The file is located inside the SQL folder located in the Solution Items folder.
+Run EF Core migrations to create the table:
 
-2. Open the query editor of your preferred database tool (Azure Data Studio or SQL Server Management Studio) and paste the SQL script copied during Step 1.
+1. Run the EF Core command
 
-3. Run the script to create the table.
+    ```sh
+    dotnet ef database update
+    ```
 
 ### Front End
+
 If you need to run the front end by itself:
 
 1. Go to the ClientApp folder
 
-```sh
-cd BasicRedisLeaderboardDemoDotNetCore
-cd ClientApp
-code .
-```
+    ```sh
+    cd BasicRedisLeaderboardDemoDotNetCore
+    cd ClientApp
+    code .
+    ```
 
 2. Install node modules
 
-```sh
-npm install
-```
+    ```sh
+    npm install
+    ```
+
 3. Run front end
 
-```sh
-npm run serve
-```
+    ```sh
+    npm run serve
+    ```
 
 ## Quickstart
 
 1. Clone the git repository
 
-```sh
-git clone https://github.com/Redislabs-Solution-Architects/acre-sql-demo
-```
+    ```sh
+    git clone https://github.com/Redislabs-Solution-Architects/acre-sql-demo
+    ```
 
 2. Open it with your Visual Studio Code or Visual Studio
 
 3. Update App Settings to: include actual connection to Redis, Azure SQL and configure the application:
 
-```text
-RedisHost = "Redis server URI"
-RedisPort = "Redis port"
-RedisPassword = "Password to the server"
-IsACRE = "True if using Azure Cache for Redis Enterprise"
-AllowAdmin = "True if need to run certain commands"
-DeleteAllKeysOnLoad = "True if need to delete all keys during load"
-LoadInitialData = "True if running the application for the first time and want to load test data"
-UseReadThrough = "True to use the Read Through pattern"
-UseWriteBehind = "True to use the Write Behind pattern"
-ReadThroughFunctionBaseUrl = "Url of the Read Through Function"
-```
+    ```text
+    RedisHost = "Redis server URI"
+    RedisPort = "Redis port"
+    RedisPassword = "Password to the server"
+    IsACRE = "True if using Azure Cache for Redis Enterprise"
+    AllowAdmin = "True if need to run certain commands"
+    DeleteAllKeysOnLoad = "True if need to delete all keys during load"
+    LoadInitialData = "True if running the application for the first time and want to load test data"
+    UseReadThrough = "True to use the Read Through pattern"
+    UseWriteBehind = "True to use the Write Behind pattern"
+    UseCacheAside = "True to use the Cache Aside pattern"
+    ReadThroughFunctionBaseUrl = "Url of the Read Through Function"
+    ```
 
 4. Update local.settings.json for the SQLSweeperFunction
     - Replace "--SECRET--" with the real connection strings for Azure SQL and Redis
@@ -107,9 +116,9 @@ ReadThroughFunctionBaseUrl = "Url of the Read Through Function"
 
 6. Run backend
 
-```sh
-dotnet run
-```
+    ```sh
+    dotnet run
+    ```
 
 7. Run Azure Function (Write Behind)
     - You can try the Write BEhind pattern by setting "true" to the "UseWriteBehind" configuration variable inside the appsettings.json. If so, you need to run the Write Behind Function by:
@@ -129,6 +138,44 @@ dotnet run
 
 Note:
 Static content runs automatically with the backend part. In case you need to run it separately, please see README in the [client](./BasicRedisLeaderboardDemoDotNetCore/ClientApp/README.md) folder.
+
+## Setup Pre-Fetch (Optional)
+
+   To setup pre-fetch you need to configure RDI either through AKS or VMs.
+
+### 1. Deploy AKS Cluster
+
+Login to your subcription via Azure CLI:
+
+```sh
+az login
+```
+
+Create a cluster:
+
+```sh
+az aks create \
+--resource-group <resource-group-name> \
+--name <cluster-name> \
+--enable-managed-identity \
+--node-count 4 \
+--generate-ssh-keys \
+--node-vm-size Standard_D4s_v3
+```
+
+Get cluster credentials:
+
+```sh
+az aks get-credentials --resource-group <resource-group-name> --name <cluster-name>
+```
+
+### 2. Deploy Redis on AKS
+
+Follow the steps [here](https://docs.redis.com/latest/kubernetes/deployment/quick-start/) to deploy Redis on AKS
+
+### 3. Deploy RDI on AKS
+
+Follow the steps [here](https://redis-data-integration.docs.dev.redislabs.com/installation/install-k8s.html#install-rdi-cli-on-kubernetes-cluster) to deploy RDI on AKS
 
 ## Demo
 
