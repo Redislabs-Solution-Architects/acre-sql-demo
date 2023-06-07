@@ -31,7 +31,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
 
         public abstract Task<List<RankResponseModel>> Range(int start, int ent, bool isDesc);
 
-        public async Task<bool> Update(string symbol, double amount)
+        public virtual async Task<bool> Update(string symbol, double amount)
         {
             bool result = false;
             string key = $"{keyPrefix}:{symbol}";

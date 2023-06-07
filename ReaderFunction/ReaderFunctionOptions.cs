@@ -10,6 +10,7 @@ namespace ReaderFunction
         public string RedisPort { get; set; }
         public string RedisPassword { get; set; }
         public bool IsACRE { get; set; }
+        public bool IsSSL { get; set; }
 
         public string GetRedisEnpoint()
         {
@@ -21,16 +22,16 @@ namespace ReaderFunction
 
             if (IsACRE)
             {
-                return $"{RedisHost}:{RedisPort},ssl=true,password={RedisPassword}";
+                return $"{RedisHost}:{RedisPort},ssl={IsSSL},password={RedisPassword}";
             }
 
             if (RedisPassword != null)
             {
-                return $"{RedisPassword}@{RedisHost}:{RedisPort}";
+                return $"{RedisPassword}@{RedisHost}:{RedisPort},ssl={IsSSL}";
             }
             else
             {
-                return $"{RedisHost}:{RedisPort}";
+                return $"{RedisHost}:{RedisPort},ssl={IsSSL}";
             }
         }
     }

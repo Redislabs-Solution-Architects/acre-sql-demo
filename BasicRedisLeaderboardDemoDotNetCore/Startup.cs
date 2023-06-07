@@ -19,6 +19,8 @@ using System.Linq;
 using System.Reflection;
 using BasicRedisLeaderboardDemoDotNetCore.BLL.Components.RankComponent.Services;
 using Microsoft.EntityFrameworkCore;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Domain.Interfaces;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Repositories;
 
 namespace BasicRedisLeaderboardDemoDotNetCore
 {
@@ -53,8 +55,13 @@ namespace BasicRedisLeaderboardDemoDotNetCore
             var redisConnection = ConnectionMultiplexer.Connect(endpoint);
 
             services.AddSingleton<IConnectionMultiplexer>(redisConnection);
-           
-            if(options.UseReadThrough && !options.UseCacheAside)
+
+            if (options.UseWriteBehind)
+            {
+                ConfigureKeySpaceNotifications(redisConnection);
+            }
+
+            if (options.UseReadThrough && !options.UseCacheAside)
             {
                 services.AddHttpClient<IAzureFunctionHttpClient, AzureFunctionHttpClient>(httpClient =>
                 {
@@ -63,19 +70,22 @@ namespace BasicRedisLeaderboardDemoDotNetCore
                 services.AddTransient<IRankService, RankServiceReadThrough>();
             }
             else if(options.UseCacheAside)
-            {
+            {    
                 services.AddTransient<IRankService, RankServiceCacheAside>();
                 services.AddDbContext<AppDbContext>(options =>
-                    options.UseSqlServer(Configuration.GetConnectionString("ConnectionString"))
+                    options.UseSqlServer(Configuration.GetConnectionString("ConnectionString"),
+                    b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName))
                 );
+
+                services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+                services.AddTransient<ICompanyRepository, CompanyRepository>();
+                services.AddTransient<IUnitOfWork, UnitOfWork>();
             }
             else
             {
                 services.AddTransient<IRankService, RankService>();
             }
 
-            ConfigureKeySpaceNotifications(redisConnection);
-           
             Assembly.Load("BasicRedisLeaderboardDemoDotNetCore.BLL");
             //ServiceAutoConfig.Configure(services);
 

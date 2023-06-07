@@ -2,46 +2,31 @@
 using System.Threading;
 using System.Threading.Tasks;
 using BasicRedisLeaderboardDemoDotNetCore.BLL.DbContexts;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Domain.Interfaces;
 
 namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Repositories
 {
 	public class UnitOfWork : IUnitOfWork
 	{
-        private readonly IAppDbContext _databaseContext;
-        private bool _disposed;
+        private readonly AppDbContext _databaseContext;
 
-        public UnitOfWork(IAppDbContext databaseContext)
+        public UnitOfWork(AppDbContext databaseContext)
         {
             _databaseContext = databaseContext;
+            Companies = new CompanyRepository(_databaseContext);
         }
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        public IRepository Repository()
-        {
-            return new Repository(_databaseContext);
-        }
+       
+        public ICompanyRepository Companies { get; private set; }
 
         public Task<int> CommitAsync(CancellationToken cancellationToken)
         {
             return _databaseContext.SaveChangesAsync(cancellationToken);
         }
 
-        ~UnitOfWork()
+        public void Dispose()
         {
-            Dispose(false);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
-                if (disposing)
-                    _databaseContext.Dispose();
-            _disposed = true;
+            _databaseContext.Dispose();
         }
     }
 }

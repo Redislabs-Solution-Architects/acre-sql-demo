@@ -8,14 +8,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using BasicRedisLeaderboardDemoDotNetCore.BLL.DbContexts;
 using BasicRedisLeaderboardDemoDotNetCore.BLL.Entities;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Domain.Interfaces;
 
 namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Repositories
 {
-	public class Repository : IRepository
+	public class GenericRepository<T> : IGenericRepository<T> where T : IEntity
     {
-        private readonly IAppDbContext _dbContext;
+        protected readonly AppDbContext _dbContext;
 
-        public Repository(IAppDbContext dbContext)
+        public GenericRepository(AppDbContext dbContext)
         {
             _dbContext = dbContext;
         }

@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace BasicRedisLeaderboardDemoDotNetCore.BLL.DbContexts
 {
-    public class AppDbContext : DbContext, IAppDbContext
+    public class AppDbContext : DbContext
     {
         public DbSet<Rank> Companies { get; set; }
 
@@ -24,15 +24,17 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.DbContexts
             foreach (var item in ChangeTracker.Entries<IEntity>().AsEnumerable())
             {
                 //Auto Timestamp
-                item.Entity.CreatedAt = DateTime.Now;
-                item.Entity.UpdatedAt = DateTime.Now;
+                if(item.State == EntityState.Modified)
+                {
+                    item.Entity.UpdatedAt = DateTime.Now;
+                }
+                else
+                {
+                    item.Entity.CreatedAt = DateTime.Now;
+                    item.Entity.UpdatedAt = DateTime.Now;
+                }
             }
             return base.SaveChangesAsync(cancellationToken);
-        }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
