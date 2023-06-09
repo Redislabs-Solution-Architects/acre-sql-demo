@@ -18,6 +18,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Migrations
                     Symbol = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Company = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     MarketCap = table.Column<long>(type: "bigint", nullable: false),
+                    Rank = table.Column<long>(type: "bigint", nullable: false),
                     Country = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)

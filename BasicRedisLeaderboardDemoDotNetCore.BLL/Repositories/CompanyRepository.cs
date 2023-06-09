@@ -7,23 +7,23 @@ using System.Linq;
 
 namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Repositories
 {
-	public class CompanyRepository : GenericRepository<Rank>, ICompanyRepository
+	public class CompanyRepository : GenericRepository<RankEntity>, ICompanyRepository
 	{
 		public CompanyRepository(AppDbContext context) : base(context)
 		{
 		}
 
-        public Rank GetCompanyBySymbol(string symbol)
+        public RankEntity GetCompanyBySymbol(string symbol)
         {        
             return _dbContext.Companies.SingleOrDefault(x => x.Symbol.ToLower() == symbol);
         }
 
-        public IEnumerable<Rank> GetAllSorted(bool isDesc)
+        public IEnumerable<RankEntity> GetAllSorted(bool isDesc)
         {
             return isDesc ? _dbContext.Companies.OrderByDescending(x => x.MarketCap) :
                            _dbContext.Companies.OrderBy(x => x.MarketCap);
         }
-        public IEnumerable<Rank> GetByRange(int start, int ent, bool isDesc)
+        public IEnumerable<RankEntity> GetByRange(int start, int ent, bool isDesc)
         {
 
             var result = isDesc ? _dbContext.Companies.OrderByDescending(x => x.MarketCap) :

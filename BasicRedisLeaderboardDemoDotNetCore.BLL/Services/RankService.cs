@@ -1,4 +1,6 @@
-﻿using BasicRedisLeaderboardDemoDotNetCore.BLL.Models;
+﻿using BasicRedisLeaderboardDemoDotNetCore.BLL.Domain.Interfaces;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Entities;
+using BasicRedisLeaderboardDemoDotNetCore.BLL.Models;
 using BasicRedisLeaderboardDemoDotNetCore.BLL.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -13,17 +15,22 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
     public class RankService : RankServiceAbstract, IRankService
     {
         private const string _splitCharacter = ":";
+        private readonly IUnitOfWork _uow;
 
-        public RankService(IConnectionMultiplexer redis, ILogger<RankService> logger, IOptions<LeaderboardDemoOptions> options)
+        public RankService(IConnectionMultiplexer redis,
+            ILogger<RankService> logger,
+            IOptions<LeaderboardDemoOptions> options,
+            IUnitOfWork uow)
             : base(redis, logger, options)
         {
+            _uow = uow ?? throw new ArgumentNullException(nameof(uow));
         }
 
         public override async Task<List<RankResponseModel>> Range(int start, int ent, bool isDesc)
         {
             var data = new List<RankResponseModel>();            
-            var results = await _db.SortedSetRangeByRankWithScoresAsync(LeaderboardDemoOptions.RedisKey, start, ent, isDesc? Order.Descending:Order.Ascending);
-            var startRank = isDesc ? start + 1 : (results.Count() / 2 - start);
+            var results = await GetSortedSetData(start, ent, isDesc);
+            var startRank = isDesc ? start + 1 : results.Count();
             var increaseFactor = isDesc ? 1 : -1;
             var items = results.ToList();
 
@@ -60,8 +67,9 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
             var results = new List<RankResponseModel>();
             for (var i = 0;i< symbols.Count; i++)
             {
-                var score = await _db.SortedSetScoreAsync(LeaderboardDemoOptions.RedisKey, symbols[i]);
-                var company = await GetCompanyBySymbol(symbols[i]);
+                var key = $"company:{symbols[i]}";
+                var score = await _db.SortedSetScoreAsync(LeaderboardDemoOptions.RedisKey, key);
+                var company = await GetCompanyBySymbol(key);
                 results.Add(
                      new RankResponseModel
                      {
@@ -74,6 +82,24 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
             }
                 
             return results;
-        }    
+        }
+
+        private async Task<SortedSetEntry[]> GetSortedSetData(int start, int end, bool isDesc)
+        {
+            //TODO: RDI don't have a way to add a stream at the moment.
+            //We need to referesh the sorted set manually when using prefetch
+            if (_options.Value.UsePrefetch)
+            {              
+                var companies = _uow.Companies.GetByRange(start, await _uow.Companies.Count<RankEntity>() -1, isDesc);
+
+                foreach(var company in companies)
+                {
+                    var key = $"company:{company.Symbol.ToLower()}";
+                    await _db.SortedSetAddAsync(LeaderboardDemoOptions.RedisKey, key, company.MarketCap);
+                }
+            }
+
+            return await _db.SortedSetRangeByRankWithScoresAsync(LeaderboardDemoOptions.RedisKey, start, end, isDesc ? Order.Descending : Order.Ascending);
+        }
     }
 }

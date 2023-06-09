@@ -56,12 +56,12 @@ namespace BasicRedisLeaderboardDemoDotNetCore
 
             services.AddSingleton<IConnectionMultiplexer>(redisConnection);
 
-            if (options.UseWriteBehind)
+            if (options.UseWriteBehind || options.UsePrefetch)
             {
                 ConfigureKeySpaceNotifications(redisConnection);
             }
 
-            if (options.UseReadThrough && !options.UseCacheAside)
+            if (options.UseReadThrough)
             {
                 services.AddHttpClient<IAzureFunctionHttpClient, AzureFunctionHttpClient>(httpClient =>
                 {
@@ -84,6 +84,14 @@ namespace BasicRedisLeaderboardDemoDotNetCore
             else
             {
                 services.AddTransient<IRankService, RankService>();
+                services.AddDbContext<AppDbContext>(options =>
+                   options.UseSqlServer(Configuration.GetConnectionString("ConnectionString"),
+                   b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName))
+               );
+
+                services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+                services.AddTransient<ICompanyRepository, CompanyRepository>();
+                services.AddTransient<IUnitOfWork, UnitOfWork>();
             }
 
             Assembly.Load("BasicRedisLeaderboardDemoDotNetCore.BLL");

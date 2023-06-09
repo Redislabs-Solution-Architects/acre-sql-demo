@@ -12,15 +12,17 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
     public abstract class RankServiceAbstract 
     {
         protected readonly IDatabase _db;
+        private readonly IConnectionMultiplexer _redisConnection;
         private readonly WriteBehind _wb;
         private readonly ILogger<RankService> _logger;
         private const string keyPrefix = "company";
-        private readonly IOptions<LeaderboardDemoOptions> _options;
+        protected readonly IOptions<LeaderboardDemoOptions> _options;
 
-        protected RankServiceAbstract(IConnectionMultiplexer redis, ILogger<RankService> logger, IOptions<LeaderboardDemoOptions> options)
+        protected RankServiceAbstract(IConnectionMultiplexer redisConnection, ILogger<RankService> logger, IOptions<LeaderboardDemoOptions> options)
         {
-            _db = redis.GetDatabase();
-            _wb = new WriteBehind(redis, keyPrefix);
+            _redisConnection = redisConnection ?? throw new ArgumentNullException(nameof(redisConnection));
+            _db = _redisConnection.GetDatabase();
+            _wb = new WriteBehind(_redisConnection, keyPrefix);
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }

@@ -78,6 +78,11 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Repositories
         {
             _dbContext.Set<T>().Remove(entity);
         }
+
+        public Task<int> Count<T>(CancellationToken cancellationToken) where T: IEntity
+        {
+            return _dbContext.Set<T>().CountAsync();
+        }
     }
 }
 

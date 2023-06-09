@@ -22,7 +22,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("BasicRedisLeaderboardDemoDotNetCore.BLL.Entities.Rank", b =>
+            modelBuilder.Entity("BasicRedisLeaderboardDemoDotNetCore.BLL.Entities.RankEntity", b =>
                 {
                     b.Property<string>("Symbol")
                         .HasColumnType("nvarchar(450)");
@@ -37,6 +37,9 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<long>("MarketCap")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("Rank")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("UpdatedAt")

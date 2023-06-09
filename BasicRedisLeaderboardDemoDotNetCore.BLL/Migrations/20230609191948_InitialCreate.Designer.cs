@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20230429223418_InitialCreate")]
+    [Migration("20230609191948_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -25,7 +25,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("BasicRedisLeaderboardDemoDotNetCore.BLL.Entities.Rank", b =>
+            modelBuilder.Entity("BasicRedisLeaderboardDemoDotNetCore.BLL.Entities.RankEntity", b =>
                 {
                     b.Property<string>("Symbol")
                         .HasColumnType("nvarchar(450)");
@@ -40,6 +40,9 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<long>("MarketCap")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("Rank")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("UpdatedAt")

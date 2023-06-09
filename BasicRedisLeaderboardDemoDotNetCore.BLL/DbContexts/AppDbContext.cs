@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 using BasicRedisLeaderboardDemoDotNetCore.BLL.DbContexts.EntityConfigurations;
@@ -12,7 +11,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.DbContexts
 {
     public class AppDbContext : DbContext
     {
-        public DbSet<Rank> Companies { get; set; }
+        public DbSet<RankEntity> Companies { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {

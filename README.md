@@ -33,16 +33,6 @@ We decided to implement the Write-Behind pattern using an Azure Function that re
 
 ## Installation
 
-### Azure SQL
-
-Run EF Core migrations to create the table:
-
-1. Run the EF Core command
-
-    ```sh
-    dotnet ef database update
-    ```
-
 ### Front End
 
 If you need to run the front end by itself:
@@ -93,7 +83,13 @@ If you need to run the front end by itself:
     ReadThroughFunctionBaseUrl = "Url of the Read Through Function"
     ```
 
-4. Update local.settings.json for the SQLSweeperFunction
+4. Run the EF Core command
+
+    ```sh
+    dotnet ef database update
+    ```
+
+5. Update local.settings.json for the SQLSweeperFunction
     - Replace "--SECRET--" with the real connection strings for Azure SQL and Redis
 
     ```text
@@ -103,7 +99,7 @@ If you need to run the front end by itself:
     }
     ```
 
-5. Update local.settings.json for the ReaderFunction
+6. Update local.settings.json for the ReaderFunction
     - Replace "--SECRET--" with the real values
 
     ```text
@@ -114,13 +110,13 @@ If you need to run the front end by itself:
     "ReaderFunctionSettings:SQLConnectionString": "--SECRET--"
     ```
 
-6. Run backend
+7. Run backend
 
     ```sh
     dotnet run
     ```
 
-7. Run Azure Function (Write Behind)
+8. Run Azure Function (Write Behind)
     - You can try the Write BEhind pattern by setting "true" to the "UseWriteBehind" configuration variable inside the appsettings.json. If so, you need to run the Write Behind Function by:
 
     ```sh
@@ -128,7 +124,7 @@ If you need to run the front end by itself:
     func start
     ```
 
-8. Run Azure Function (Read Through)
+9. Run Azure Function (Read Through)
    - You can try the Read Through pattern by setting "true" to the "UseReadThrough" configuration variable inside the appsettings.json. If so, you need to run the Read Through function by:
 
    ```sh
