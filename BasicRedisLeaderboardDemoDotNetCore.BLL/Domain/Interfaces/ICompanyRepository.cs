@@ -4,11 +4,11 @@ using BasicRedisLeaderboardDemoDotNetCore.BLL.Entities;
 
 namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Domain.Interfaces
 {
-	public interface ICompanyRepository : IGenericRepository<Rank>
+	public interface ICompanyRepository : IGenericRepository<RankEntity>
 	{
-		Rank GetCompanyBySymbol(string symbol);
-		IEnumerable<Rank> GetByRange(int start, int ent, bool isDesc);
-		IEnumerable<Rank> GetAllSorted(bool isDesc);
+        RankEntity GetCompanyBySymbol(string symbol);
+		IEnumerable<RankEntity> GetByRange(int start, int ent, bool isDesc);
+		IEnumerable<RankEntity> GetAllSorted(bool isDesc);
 	}
 }
 

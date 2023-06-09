@@ -1,12 +1,7 @@
 ﻿using System;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
-using ReaderFunction.Models;
-using System.Linq;
-using StackExchange.Redis;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using System.Net.Http;
 using Microsoft.Extensions.Logging;
 
 namespace ReaderFunction

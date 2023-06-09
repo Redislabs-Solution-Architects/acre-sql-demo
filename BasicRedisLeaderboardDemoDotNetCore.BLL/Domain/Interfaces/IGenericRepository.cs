@@ -20,6 +20,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Domain.Interfaces
         void Update<T>(T entity) where T : IEntity;
         void UpdateRange<T>(IEnumerable<T> entities) where T : IEntity;
         void Delete<T>(T entity) where T : IEntity;
+        Task<int> Count<T>(CancellationToken cancellationToken = default) where T : IEntity;
     }
 }
 

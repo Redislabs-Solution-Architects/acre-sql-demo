@@ -6,9 +6,9 @@ using BasicRedisLeaderboardDemoDotNetCore.BLL.Entities;
 
 namespace BasicRedisLeaderboardDemoDotNetCore.BLL.DbContexts.EntityConfigurations
 {
-	public class CompanyEntityTypeConfiguration : IEntityTypeConfiguration<Rank>
+	public class CompanyEntityTypeConfiguration : IEntityTypeConfiguration<RankEntity>
     {
-        public void Configure(EntityTypeBuilder<Rank> builder)
+        public void Configure(EntityTypeBuilder<RankEntity> builder)
         {
             builder.ToTable("company");
 

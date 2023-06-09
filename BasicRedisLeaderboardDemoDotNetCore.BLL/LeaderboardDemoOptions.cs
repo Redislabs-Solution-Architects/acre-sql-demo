@@ -14,6 +14,7 @@
         public bool UseReadThrough { get; set; }
         public bool UseWriteBehind { get; set; }
         public bool UseCacheAside { get; set; }
+        public bool UsePrefetch { get; set; }
         public string ReadThroughFunctionBaseUrl { get; set; }
         public bool LoadInitialData { get; set; }
 
