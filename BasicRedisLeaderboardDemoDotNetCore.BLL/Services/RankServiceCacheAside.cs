@@ -99,7 +99,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
         private async Task<List<RankResponseModel>> GetData(int start, int ent, bool isDesc, IEnumerable<RankEntity> data)
         {
             var results = new List<RankResponseModel>();
-            var startRank = isDesc ? start + 1 : (data.Count() / 2 - start);
+            var startRank = isDesc ? start + 1 : data.Count();
             var increaseFactor = isDesc ? 1 : -1;
             var items = data.ToList();
 
@@ -123,7 +123,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
         private async Task<List<RankResponseModel>> GetData(int start, int ent, bool isDesc, SortedSetEntry[] data)
         {
             var results = new List<RankResponseModel>();
-            var startRank = isDesc ? start + 1 : (data.Count() / 2 - start);
+            var startRank = isDesc ? start + 1 : data.Count();
             var increaseFactor = isDesc ? 1 : -1;
             var items = data.ToList();
 
