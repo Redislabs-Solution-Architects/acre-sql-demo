@@ -80,11 +80,12 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
             try
             {
                 var record = _uow.Companies.GetCompanyBySymbol(symbol);
-                record.MarketCap = (long)amount;
+                var newAmount = record.MarketCap + (long)amount;
+                record.MarketCap = newAmount;
 
                 _uow.Companies.Update<RankEntity>(record);
                 await _uow.CommitAsync();
-                await base.Update(symbol, amount);
+                await base.Update(symbol, newAmount);
 
                 result = true;
             }

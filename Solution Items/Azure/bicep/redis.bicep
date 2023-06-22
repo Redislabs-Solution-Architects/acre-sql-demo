@@ -2,8 +2,8 @@
 @description('Required. Azure location to which the resources are to be deployed')
 param location string
 
-@description('Required. Azure secondary location to which the resources are to be deployed')
-param location2 string
+@description('Optional. Azure secondary location to which the resources are to be deployed')
+param location2 string = (isGeoReplicated)? 'WestUS': ''
 
 @description('Optional. The Azure Cache for Redis Enterprise sku.')
 @allowed([
@@ -84,11 +84,14 @@ param tags object = {}
 @description('Required. Enable zone redundancy.')
 param availabilityZoneOption bool = true
 
-@description('Required. Key Vault Name')
+@description('Required. Key Vault Object')
 param keyVaultName string
 
 @description('Required. Application name')
 param applicationName string
+
+@description('Optional. Setup geo-replication?')
+param isGeoReplicated bool = false
 
 // Variables
 var resourceNames = {
@@ -134,18 +137,18 @@ resource redisLocation1Db 'Microsoft.Cache/redisEnterprise/databases@2022-01-01'
     modules: [for module in modulesEnabled: {
       name: module
     }]
-    geoReplication: {
+    geoReplication: isGeoReplicated ? {
        groupNickname: resourceNames.redisGeoReplicationGroupName 
        linkedDatabases: [
         {
           id: '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.Cache/redisEnterprise/${resourceNames.redisLocation1Name}/databases/default'
         }
        ]
-    }
+    } : null
   }
 }
 
-resource redisLocation2 'Microsoft.Cache/redisEnterprise@2022-01-01' = {
+resource redisLocation2 'Microsoft.Cache/redisEnterprise@2022-01-01' = if(isGeoReplicated) {
   name: resourceNames.redisLocation2Name
   location: location2
   dependsOn: [
@@ -162,7 +165,7 @@ resource redisLocation2 'Microsoft.Cache/redisEnterprise@2022-01-01' = {
   tags: tags
 }
 
-resource redisLocation2Db 'Microsoft.Cache/redisEnterprise/databases@2022-01-01' = {
+resource redisLocation2Db 'Microsoft.Cache/redisEnterprise/databases@2022-01-01' = if(isGeoReplicated) {
   name: resourceNames.redisDbName
   parent: redisLocation2
   properties: {
@@ -195,27 +198,41 @@ resource redisLocation2Db 'Microsoft.Cache/redisEnterprise/databases@2022-01-01'
 
 
 //Add endpoint to Key Vault
-resource redisHostNameSecret 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = {
-  name: '${keyVaultName}/redisHostName'  // The first part is KV's name
+resource redis1HostNameSecret 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = {
+  name: '${keyVaultName}/redis1HostName'  // The first part is KV's name
   properties: {
     value: redisLocation1.properties.hostName
   }
 }
 
-resource redisPassword 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = {
- name: '${keyVaultName}/redisPassword'  // The first part is KV's name
+resource redis1Password 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = {
+ name: '${keyVaultName}/redis1Password'  // The first part is KV's name
  properties: {
   value: '${listKeys(redisLocation1.id, redisLocation1.apiVersion).keys[0].value}'
  }
 }
+
+resource redis2HostNameSecret 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = if(isGeoReplicated) {
+  name: '${keyVaultName}/redis2HostName'  // The first part is KV's name
+  properties: {
+    value: redisLocation2.properties.hostName
+  }
+}
+
+resource redis2Password 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = if(isGeoReplicated) {
+  name: '${keyVaultName}/redis2Password'  // The first part is KV's name
+  properties: {
+   value: '${listKeys(redisLocation2.id, redisLocation2.apiVersion).keys[0].value}'
+  }
+ }
 
 //Output
 output redisLocation1Name string = redisLocation1.name
 output redisLocation1Id string = redisLocation1.id
 output redisLocation1HostName string = redisLocation1.properties.hostName
 
-output redisLocation2Name string = redisLocation2.name
-output redisLocation2Id string  = redisLocation2.name
-output redisLocation2HostName string = redisLocation2.properties.hostName
+output redisLocation2Name string = (isGeoReplicated) ? redisLocation2.name : ''
+output redisLocation2Id string  = (isGeoReplicated) ? redisLocation2.name : ''
+output redisLocation2HostName string = (isGeoReplicated)? redisLocation2.properties.hostName : ''
 
 

@@ -10,8 +10,35 @@ param tags object = {}
 @description('Required. Application name')
 param applicationName string
 
-@description('Optiona. App Insights Instrumentation Key')
+@description('Optional. App Insights Instrumentation Key')
 param instrumentationKey string = ''
+
+@description('Optional. Setup geo-replication?')
+param isGeoReplicated bool = false
+
+@description('Required. Redis 1 Host Name')
+@secure()
+param redis1HostName string
+
+@description('Required. Redis 1 Password')
+@secure()
+param redis1Password string
+
+@description('Optional. Redis 2 Host Name')
+@secure ()
+param redis2HostName string
+
+@description('Optional. Redis 2 Password')
+@secure()
+param redis2Password string
+
+@description('Required. Caching Pattern')
+param cachingPattern string
+
+@description('Required. Azure SQL Connection String')
+@secure()
+param azureSQLConnectionString string
+
 
 
 // Variables
@@ -48,7 +75,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   }
 }
 
-resource appServicePlan2 'Microsoft.Web/serverfarms@2022-03-01' = {
+resource appServicePlan2 'Microsoft.Web/serverfarms@2022-03-01' = if(isGeoReplicated) {
   name: resourceNames.appServicePlan2Name
   location: location2
   tags: tags
@@ -124,6 +151,7 @@ resource app 'Microsoft.Web/sites@2022-03-01' = {
   }
 }
 
+
 resource app1AppSettings 'Microsoft.Web/sites/config@2022-03-01' = if(!empty(instrumentationKey)) {
   name: 'web'
   parent: app
@@ -133,11 +161,57 @@ resource app1AppSettings 'Microsoft.Web/sites/config@2022-03-01' = if(!empty(ins
         name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
         value: instrumentationKey
       }
+      {
+        name: 'LeaderboardSettings__RedisHost'
+        value: redis1HostName
+      }
+      {
+        name: 'LeaderboardSettings__RedisPassword'
+        value: redis1Password
+      }
+      {
+        name: 'LeaderboardSettings__IsACRE'
+        value: true
+      }
+      {
+        name: 'LeaderboardSettings__AllowAdmin'
+        value: true
+      }
+      {
+        name: 'LeaderboardSettings__LoadInitialData'
+        value: true
+      }
+      {
+        name: 'LeaderboardSettings__DeleteAllKeysOnLoad'
+        value: true
+      }
+      {
+        name: 'LeaderboardSettings__UseReadThrough'
+        value: cachingPattern == 'Write-Behind & Read-Through' ? true : false
+      }
+      {
+        name: 'LeaderboardSettings__UseWriteBehind'
+        value: cachingPattern == 'Write-Behind & Read-Through' ? true : false
+      }
+      {
+        name: 'LeaderboardSettings__UseCacheAside'
+        value: cachingPattern == 'Cache-Aside' ? true : false
+      }
+      {
+        name: 'LeaderboardSettings__UsePreFetch'
+        value: cachingPattern == 'Real-Time Ingestion' ? true : false
+      }
+    ]
+    connectionStrings: [
+      {
+        name: 'ConnectionString'
+        connectionString: azureSQLConnectionString
+      }
     ]
   }
 }
 
-resource app2 'Microsoft.Web/sites@2022-03-01' = {
+resource app2 'Microsoft.Web/sites@2022-03-01' = if(isGeoReplicated) {
   name: resourceNames.app2Name
   location: location2
   tags: tags
@@ -187,7 +261,7 @@ resource app2 'Microsoft.Web/sites@2022-03-01' = {
   }
 }
 
-resource app2AppSettings 'Microsoft.Web/sites/config@2022-03-01' = if(!empty(instrumentationKey)) {
+resource app2AppSettings 'Microsoft.Web/sites/config@2022-03-01' = if(!empty(instrumentationKey) && isGeoReplicated) {
   name: 'web'
   parent: app2
   properties: {
@@ -196,10 +270,55 @@ resource app2AppSettings 'Microsoft.Web/sites/config@2022-03-01' = if(!empty(ins
         name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
         value: instrumentationKey
       }
+      {
+        name: 'LeaderboardSettings__RedisHost'
+        value: redis2HostName
+      }
+      {
+        name: 'LeaderboardSettings__RedisPassword'
+        value: redis2Password
+      }
+      {
+        name: 'LeaderboardSettings__IsACRE'
+        value: true
+      }
+      {
+        name: 'LeaderboardSettings__AllowAdmin'
+        value: true
+      }
+      {
+        name: 'LeaderboardSettings__LoadInitialData'
+        value: true
+      }
+      {
+        name: 'LeaderboardSettings__DeleteAllKeysOnLoad'
+        value: true
+      }
+      {
+        name: 'LeaderboardSettings__UseReadThrough'
+        value: cachingPattern == 'Write-Behind & Read-Through' ? true : false
+      }
+      {
+        name: 'LeaderboardSettings__UseWriteBehind'
+        value: cachingPattern == 'Write-Behind & Read-Through' ? true : false
+      }
+      {
+        name: 'LeaderboardSettings__UseCacheAside'
+        value: cachingPattern == 'Cache-Aside' ? true : false
+      }
+      {
+        name: 'LeaderboardSettings__UsePreFetch'
+        value: cachingPattern == 'Real-Time Ingestion' ? true : false
+      }
+    ]
+    connectionStrings: [
+      {
+        name: 'ConnectionString'
+        connectionString: azureSQLConnectionString
+      }
     ]
   }
 }
 
 output appHostName string = app.properties.defaultHostName
 output app2HostName string = app2.properties.defaultHostName 
-
