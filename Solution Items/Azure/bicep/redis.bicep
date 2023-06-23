@@ -84,7 +84,7 @@ param tags object = {}
 @description('Required. Enable zone redundancy.')
 param availabilityZoneOption bool = true
 
-@description('Required. Key Vault Object')
+@description('Required. Key Vault Name')
 param keyVaultName string
 
 @description('Required. Application name')
