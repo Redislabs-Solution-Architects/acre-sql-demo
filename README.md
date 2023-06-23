@@ -15,12 +15,21 @@ We decided to implement the Write-Behind pattern using an Azure Function that re
 - Use Azure Function to sync the updates to Azure SQL db using a Write-Behind pattern
 - Use Azure Function to use Read-Through pattern
 - Ability to configure Cache-Aside pattern
-- Ability to configure Pre-Fetch pattern with RDI
+- Ability to configure Real-Time Ingestion pattern with RDI
 
 ### Architecture
 
-![Architecture](/Solution%20Items/Images/architecture.png)
+#### Write-Behind & Read-Through
 
+![Write Behind & Read-Through Architecture with A-A](/Solution%20Items/Images/architecture.png)
+
+#### Cache-Aside
+
+![Cache-Aside Architecture](/Solution%20Items/Images/cache-aside.png)
+
+#### Real-Time Ingestion
+
+![Real-Time Ingestion Architecture](/Solution%20Items/Images/real-time-ingestion.png)
 ### Prerequisites
 
 - VS Code or Visual Studio
