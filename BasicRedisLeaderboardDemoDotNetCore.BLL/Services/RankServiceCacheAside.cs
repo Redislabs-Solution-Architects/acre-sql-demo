@@ -80,11 +80,12 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
             try
             {
                 var record = _uow.Companies.GetCompanyBySymbol(symbol);
-                record.MarketCap = (long)amount;
+                var newAmount = record.MarketCap + (long)amount;
+                record.MarketCap = newAmount;
 
                 _uow.Companies.Update<RankEntity>(record);
                 await _uow.CommitAsync();
-                await base.Update(symbol, amount);
+                await base.Update(symbol, newAmount);
 
                 result = true;
             }
@@ -99,7 +100,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
         private async Task<List<RankResponseModel>> GetData(int start, int ent, bool isDesc, IEnumerable<RankEntity> data)
         {
             var results = new List<RankResponseModel>();
-            var startRank = isDesc ? start + 1 : (data.Count() / 2 - start);
+            var startRank = isDesc ? start + 1 : data.Count();
             var increaseFactor = isDesc ? 1 : -1;
             var items = data.ToList();
 
@@ -123,7 +124,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
         private async Task<List<RankResponseModel>> GetData(int start, int ent, bool isDesc, SortedSetEntry[] data)
         {
             var results = new List<RankResponseModel>();
-            var startRank = isDesc ? start + 1 : (data.Count() / 2 - start);
+            var startRank = isDesc ? start + 1 : data.Count();
             var increaseFactor = isDesc ? 1 : -1;
             var items = data.ToList();
 

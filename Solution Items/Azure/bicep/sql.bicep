@@ -12,6 +12,8 @@ param adminUserName string = 'sql-admin'
 @description('Required. Application name')
 param applicationName string
 
+@description('Required. Key Vault Name')
+param keyVaultName string
 
 var resourceNames = {
   sqlServerName: 'sql-${applicationName}-${location}'
@@ -52,6 +54,13 @@ resource sqlServerDb 'Microsoft.Sql/servers/databases@2022-02-01-preview' = {
     isLedgerOn: false
   }
 }
+
+resource sqlConnectionString 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = {
+  name: '${keyVaultName}/azureSqlConnectionString'
+  properties: {
+   value: 'Server=tcp:${reference(sqlServer.name).fullyQualifiedDomainName},1433;Initial Catalog=${sqlServerDb.name};Persist Security Info=False;User ID=${reference(sqlServer.name).administratorLogin};Password=${reference(sqlServer.name).administratorLoginPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+  }
+ }
 
 output sqlServerName string = sqlServer.name
 output sqlServerDbName string = sqlServerDb.name
