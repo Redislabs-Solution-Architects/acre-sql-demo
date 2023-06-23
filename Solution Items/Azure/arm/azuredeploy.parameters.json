@@ -2,8 +2,38 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "cachingPattern": {
+            "value": "Write-Behind & Read-Through"
+        },
+        "location": {
+            "value": ""
+        },
+        "tags": {
+            "value": {}
+        },
+        "isGeoReplicated": {
+            "value": false
+        },
         "location2": {
+            "value": "WestUS"
+        },
+        "applicationName": {
+            "value": "leaderboard"
+        },
+        "aksSSHKey": {
             "value": "" 
+        },
+        "aksAdminUsername": {
+            "value": ""
+        },
+        "aksVmDiskSize": {
+            "value": 0
+        },
+        "aksNodeCount": {
+            "value": 4
+        },
+        "aksVmSize": {
+            "value": "Standard_D4s_v3"
         }
     }
 }

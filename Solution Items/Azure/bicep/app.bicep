@@ -1,8 +1,8 @@
 @description('Required. Azure location to which the resources are to be deployed')
 param location string
 
-@description('Required. Azure secondary location to which the resources are to be deployed')
-param location2 string
+@description('Optional. Azure secondary location to which the resources are to be deployed')
+param location2 string = ''
 
 @description('Optional. The tags to be assigned to the created resources.')
 param tags object = {}
@@ -10,8 +10,8 @@ param tags object = {}
 @description('Required. Application name')
 param applicationName string
 
-@description('Optional. App Insights Instrumentation Key')
-param instrumentationKey string = ''
+@description('Optional. App Insights Connection String')
+param appiConnectionString string = ''
 
 @description('Optional. Setup geo-replication?')
 param isGeoReplicated bool = false
@@ -26,11 +26,11 @@ param redis1Password string
 
 @description('Optional. Redis 2 Host Name')
 @secure ()
-param redis2HostName string
+param redis2HostName string = ''
 
 @description('Optional. Redis 2 Password')
 @secure()
-param redis2Password string
+param redis2Password string = ''
 
 @description('Required. Caching Pattern')
 param cachingPattern string
@@ -152,14 +152,14 @@ resource app 'Microsoft.Web/sites@2022-03-01' = {
 }
 
 
-resource app1AppSettings 'Microsoft.Web/sites/config@2022-03-01' = if(!empty(instrumentationKey)) {
+resource app1AppSettings 'Microsoft.Web/sites/config@2022-03-01' = if(!empty(appiConnectionString)) {
   name: 'web'
   parent: app
   properties: {
     appSettings: [
       {
-        name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-        value: instrumentationKey
+        name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+        value: appiConnectionString
       }
       {
         name: 'LeaderboardSettings__RedisHost'
@@ -171,35 +171,35 @@ resource app1AppSettings 'Microsoft.Web/sites/config@2022-03-01' = if(!empty(ins
       }
       {
         name: 'LeaderboardSettings__IsACRE'
-        value: true
+        value: 'true'
       }
       {
         name: 'LeaderboardSettings__AllowAdmin'
-        value: true
+        value: 'true'
       }
       {
         name: 'LeaderboardSettings__LoadInitialData'
-        value: true
+        value: 'true'
       }
       {
         name: 'LeaderboardSettings__DeleteAllKeysOnLoad'
-        value: true
+        value: 'true'
       }
       {
         name: 'LeaderboardSettings__UseReadThrough'
-        value: cachingPattern == 'Write-Behind & Read-Through' ? true : false
+        value: cachingPattern == 'Write-Behind & Read-Through' ? 'true' : 'false'
       }
       {
         name: 'LeaderboardSettings__UseWriteBehind'
-        value: cachingPattern == 'Write-Behind & Read-Through' ? true : false
+        value: cachingPattern == 'Write-Behind & Read-Through' ? 'true' : 'false'
       }
       {
         name: 'LeaderboardSettings__UseCacheAside'
-        value: cachingPattern == 'Cache-Aside' ? true : false
+        value: cachingPattern == 'Cache-Aside' ? 'true' : 'false'
       }
       {
         name: 'LeaderboardSettings__UsePreFetch'
-        value: cachingPattern == 'Real-Time Ingestion' ? true : false
+        value: cachingPattern == 'Real-Time Ingestion' ? 'true' : 'false'
       }
     ]
     connectionStrings: [
@@ -261,14 +261,14 @@ resource app2 'Microsoft.Web/sites@2022-03-01' = if(isGeoReplicated) {
   }
 }
 
-resource app2AppSettings 'Microsoft.Web/sites/config@2022-03-01' = if(!empty(instrumentationKey) && isGeoReplicated) {
+resource app2AppSettings 'Microsoft.Web/sites/config@2022-03-01' = if(!empty(appiConnectionString) && isGeoReplicated) {
   name: 'web'
   parent: app2
   properties: {
     appSettings: [
       {
-        name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-        value: instrumentationKey
+        name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+        value: appiConnectionString
       }
       {
         name: 'LeaderboardSettings__RedisHost'
@@ -280,35 +280,35 @@ resource app2AppSettings 'Microsoft.Web/sites/config@2022-03-01' = if(!empty(ins
       }
       {
         name: 'LeaderboardSettings__IsACRE'
-        value: true
+        value: 'true'
       }
       {
         name: 'LeaderboardSettings__AllowAdmin'
-        value: true
+        value: 'true'
       }
       {
         name: 'LeaderboardSettings__LoadInitialData'
-        value: true
+        value: 'true'
       }
       {
         name: 'LeaderboardSettings__DeleteAllKeysOnLoad'
-        value: true
+        value: 'true'
       }
       {
         name: 'LeaderboardSettings__UseReadThrough'
-        value: cachingPattern == 'Write-Behind & Read-Through' ? true : false
+        value: cachingPattern == 'Write-Behind & Read-Through' ? 'true' : 'false'
       }
       {
         name: 'LeaderboardSettings__UseWriteBehind'
-        value: cachingPattern == 'Write-Behind & Read-Through' ? true : false
+        value: cachingPattern == 'Write-Behind & Read-Through' ? 'true' : 'false'
       }
       {
         name: 'LeaderboardSettings__UseCacheAside'
-        value: cachingPattern == 'Cache-Aside' ? true : false
+        value: cachingPattern == 'Cache-Aside' ? 'true' : 'false'
       }
       {
         name: 'LeaderboardSettings__UsePreFetch'
-        value: cachingPattern == 'Real-Time Ingestion' ? true : false
+        value: cachingPattern == 'Real-Time Ingestion' ? 'true' : 'false'
       }
     ]
     connectionStrings: [
