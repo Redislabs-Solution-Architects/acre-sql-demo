@@ -837,7 +837,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.DbContexts
                         // TODO: Optional use search to index and get sorted results
                         var key = $"company:{RankEntity.Symbol.ToLower()}";
 
-                        await redisDatabase.SortedSetAddAsync(LeaderboardDemoOptions.RedisKey, key, RankEntity.MarketCap);
+                        await redisDatabase.SortedSetAddAsync(LeaderboardDemoOptions.RedisKey, key, RankEntity.MarketCap.GetValueOrDefault());
 
                         await redisDatabase.HashSetAsync(key, new HashEntry[]
                         {

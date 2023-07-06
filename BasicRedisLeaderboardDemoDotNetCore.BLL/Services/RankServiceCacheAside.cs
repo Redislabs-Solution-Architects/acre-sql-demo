@@ -80,12 +80,12 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
             try
             {
                 var record = _uow.Companies.GetCompanyBySymbol(symbol);
-                var newAmount = record.MarketCap + (long)amount;
+                var newAmount = record?.MarketCap + amount;
                 record.MarketCap = newAmount;
 
                 _uow.Companies.Update<RankEntity>(record);
                 await _uow.CommitAsync();
-                await base.Update(symbol, newAmount);
+                await base.Update(symbol, newAmount.GetValueOrDefault());
 
                 result = true;
             }
@@ -113,7 +113,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
                         Country = items[i].Country,
                         Rank = startRank,
                         Symbol = items[i].Symbol,
-                        MarketCap = items[i].MarketCap,
+                        MarketCap = items[i].MarketCap.GetValueOrDefault(),
                     });
                 startRank += increaseFactor;
             }

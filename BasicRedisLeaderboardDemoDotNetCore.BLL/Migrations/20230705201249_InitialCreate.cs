@@ -15,11 +15,11 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Migrations
                 name: "company",
                 columns: table => new
                 {
-                    Symbol = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Company = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    MarketCap = table.Column<long>(type: "bigint", nullable: false),
-                    Rank = table.Column<long>(type: "bigint", nullable: false),
-                    Country = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Symbol = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: false),
+                    Company = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    MarketCap = table.Column<double>(type: "float", nullable: true),
+                    Rank = table.Column<int>(type: "int", nullable: true),
+                    Country = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },

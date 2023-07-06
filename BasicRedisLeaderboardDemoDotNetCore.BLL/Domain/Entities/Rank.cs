@@ -9,8 +9,8 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Entities
 
         [Key]
         public string Symbol { get; set; }
-        public long MarketCap { get; set; }
-        public long Rank { get; set; }
+        public double? MarketCap { get; set; }
+        public int? Rank { get; set; }
         public string Country { get; set; }
     }
 }
