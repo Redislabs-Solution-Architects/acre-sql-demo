@@ -1,0 +1,29 @@
+source:
+  table: company
+transform:
+  - uses: map
+    with:
+      expression:
+        symbol: Symbol
+        company: Company
+        country: Country
+        marketcap: MarketCap
+        sortedsetkey: concat(['company',':',lower(Symbol)])
+      language: jmespath
+output:
+  - uses: redis.write
+    with:
+      connection: target
+      key:
+        expression: concat(['company',':',lower(symbol)])
+        language: jmespath
+  - uses: redis.write
+    with:
+      connection: target
+      data_type: sorted_set
+      key:
+        expression: "`REDIS_LEADERBOARD`"
+        language: jmespath
+      args:
+        score: marketcap
+        member: sortedsetkey

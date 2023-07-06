@@ -25,22 +25,25 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Migrations
             modelBuilder.Entity("BasicRedisLeaderboardDemoDotNetCore.BLL.Entities.RankEntity", b =>
                 {
                     b.Property<string>("Symbol")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(25)
+                        .HasColumnType("nvarchar(25)");
 
                     b.Property<string>("Company")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Country")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<long>("MarketCap")
-                        .HasColumnType("bigint");
+                    b.Property<double?>("MarketCap")
+                        .HasColumnType("float");
 
-                    b.Property<long>("Rank")
-                        .HasColumnType("bigint");
+                    b.Property<int?>("Rank")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");

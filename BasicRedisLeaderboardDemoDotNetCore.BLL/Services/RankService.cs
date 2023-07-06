@@ -29,7 +29,7 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
         public override async Task<List<RankResponseModel>> Range(int start, int ent, bool isDesc)
         {
             var data = new List<RankResponseModel>();            
-            var results = await GetSortedSetData(start, ent, isDesc);
+            var results = await _db.SortedSetRangeByRankWithScoresAsync(LeaderboardDemoOptions.RedisKey, start, ent, isDesc ? Order.Descending : Order.Ascending);
             var startRank = isDesc ? start + 1 : results.Count();
             var increaseFactor = isDesc ? 1 : -1;
             var items = results.ToList();
@@ -82,24 +82,6 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.Services
             }
                 
             return results;
-        }
-
-        private async Task<SortedSetEntry[]> GetSortedSetData(int start, int end, bool isDesc)
-        {
-            //TODO: RDI don't have a way to add a stream at the moment.
-            //We need to referesh the sorted set manually when using prefetch
-            if (_options.Value.UsePrefetch)
-            {              
-                var companies = _uow.Companies.GetByRange(start, await _uow.Companies.Count<RankEntity>() -1, isDesc);
-
-                foreach(var company in companies)
-                {
-                    var key = $"company:{company.Symbol.ToLower()}";
-                    await _db.SortedSetAddAsync(LeaderboardDemoOptions.RedisKey, key, company.MarketCap);
-                }
-            }
-
-            return await _db.SortedSetRangeByRankWithScoresAsync(LeaderboardDemoOptions.RedisKey, start, end, isDesc ? Order.Descending : Order.Ascending);
-        }
+        }       
     }
 }

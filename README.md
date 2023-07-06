@@ -39,6 +39,7 @@ We decided to implement the Write-Behind pattern using an Azure Function that re
   - Configuration steps [here](https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-quickstart?view=azuresql&tabs=azure-portal)
 - Azure Cache for Redis Enterprise
   - Configuration steps [here](https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/quickstart-create-redis-enterprise)
+- If using Real Time Ingestion with RDI use version v0.104.0 when creating the RDI CLI Pod. RDI started support of creating sorted sets starting this version. Please use the Job yaml file located [here](/Solution%20Items/RDI/company.yaml)
 
 ## Installation
 
@@ -89,6 +90,8 @@ If you need to run the front end by itself:
     UseReadThrough = "True to use the Read Through pattern"
     UseWriteBehind = "True to use the Write Behind pattern"
     UseCacheAside = "True to use the Cache Aside pattern"
+    UsePreFetch = "True to use Real Time Ingestion"
+    IsSSL = "True if Redis configure with SSL"
     ReadThroughFunctionBaseUrl = "Url of the Read Through Function"
     ```
 

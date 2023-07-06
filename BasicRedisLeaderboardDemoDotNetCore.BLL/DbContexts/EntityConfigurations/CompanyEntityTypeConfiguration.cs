@@ -13,6 +13,22 @@ namespace BasicRedisLeaderboardDemoDotNetCore.BLL.DbContexts.EntityConfiguration
             builder.ToTable("company");
 
             builder.HasKey(x => x.Symbol);
+
+            builder.Property(x => x.Symbol).HasMaxLength(25);
+
+            builder.Property(x => x.Company)
+                .HasMaxLength(100)
+                .IsRequired(false);
+
+            builder.Property(x => x.Country)
+                .HasMaxLength(50)
+                .IsRequired(false);
+            
+            builder.Property(x => x.Rank)
+                .IsRequired(false);
+
+            builder.Property(x => x.MarketCap)
+                .IsRequired(false);
         }
 	}
 }
